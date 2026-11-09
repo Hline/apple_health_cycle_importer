@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>애플 건강 생리주기 일괄 등록기 (Apple Health Cycle Importer)</title>
+  <style>
+    :root {
+      --primary: #ff2d55;
+      --primary-light: #fff0f3;
+      --primary-hover: #ffe4e9;
+      --primary-dark: #d91b42;
+      --bg: #f8f9fa;
+      --card: #ffffff;
+      --text: #1c1c1e;
+      --muted: #6c6c70;
+      --border: #e5e5ea;
+      --code-bg: #f5f6f8;
+      --shortcut-blue: #007aff;
+      --shortcut-blue-light: #eef6ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Segoe UI", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 28px 16px 80px;
+    }
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .badge {
+      display: inline-block;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 0.82rem;
+      padding: 5px 14px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    header p {
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    /* Shortcut Banner */
+    .shortcut-banner {
+      background: linear-gradient(135deg, #007aff 0%, #0056b3 100%);
+      color: white;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 22px;
+      box-shadow: 0 8px 24px rgba(0, 122, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .shortcut-banner-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .shortcut-banner-text h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .shortcut-banner-text p {
+      font-size: 0.9rem;
+      opacity: 0.92;
+    }
+    .btn-shortcut-link {
+      background: #ffffff;
+      color: #007aff;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 12px 20px;
+      border-radius: 12px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-shortcut-link:hover {
+      background: #f0f7ff;
+      transform: translateY(-1px);
+    }
+
+    .privacy-banner {
+      background: #eef9f2;
+      border: 1px solid #c3e8d1;
+      color: #1b6e3c;
+      font-size: 0.88rem;
+      padding: 10px 16px;
+      border-radius: 12px;
+      margin-bottom: 22px;
+      text-align: center;
+      font-weight: 600;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 24px;
+      margin-bottom: 22px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      border: 1px solid var(--border);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 1.18rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .step-num {
+      background: var(--primary);
+      color: #fff;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    /* Formats Grid */
+    .format-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .format-box {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .format-box h4 {
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .format-box pre {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.82rem;
+      color: #333;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+
+    /* Dropzone */
+    .dropzone {
+      border: 2px dashed #ffb3c1;
+      background: var(--primary-light);
+      border-radius: 16px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 16px;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--primary);
+      background: #ffe6ec;
+    }
+    .dropzone p {
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 6px;
+      font-size: 1.05rem;
+    }
+    .dropzone span {
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    textarea {
+      width: 100%;
+      height: 160px;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.88rem;
+      resize: vertical;
+      margin-bottom: 16px;
+      line-height: 1.55;
+    }
+    textarea:focus {
+      outline: 2px solid #ffb3c1;
+      border-color: var(--primary);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .stat-box {
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-label {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .stat-value {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    /* Buttons */
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 0.94rem;
+      font-weight: 700;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .btn-sm {
+      padding: 7px 14px;
+      font-size: 0.84rem;
+      border-radius: 8px;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      flex: 1;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+    }
+    .btn-secondary {
+      background: #f2f2f7;
+      color: var(--text);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: #e5e5ea;
+    }
+    .btn-outline {
+      background: #fff;
+      color: var(--primary);
+      border: 1px solid #ffb3c1;
+    }
+    .btn-outline:hover {
+      background: var(--primary-light);
+    }
+
+    /* Output */
+    .output-box {
+      background: #1c1c1e;
+      color: #66d9ef;
+      padding: 16px;
+      border-radius: 14px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.88rem;
+      min-height: 80px;
+      max-height: 220px;
+      overflow-y: auto;
+      white-space: pre;
+      margin-bottom: 16px;
+    }
+    .output-box.empty {
+      color: #8e8e93;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: normal;
+      text-align: center;
+    }
+
+    /* Shortcut Steps */
+    .shortcut-steps {
+      list-style: none;
+      counter-reset: sc-counter;
+    }
+    .shortcut-steps li {
+      counter-increment: sc-counter;
+      position: relative;
+      padding-left: 36px;
+      margin-bottom: 16px;
+      font-size: 0.96rem;
+    }
+    .shortcut-steps li::before {
+      content: counter(sc-counter);
+      position: absolute;
+      left: 0;
+      top: 2px;
+      width: 24px;
+      height: 24px;
+      background: #f2f2f7;
+      color: var(--text);
+      font-weight: 700;
+      font-size: 0.84rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pill {
+      display: inline-block;
+      background: #eef3ff;
+      color: #0066cc;
+      font-weight: 600;
+      padding: 1px 8px;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      border: 1px solid #cfe0ff;
+    }
+    .pill.health {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border-color: #ffc2cf;
+    }
+    .table-wrap {
+      max-height: 240px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: #f8f9fa;
+      position: sticky;
+      top: 0;
+      font-weight: 700;
+    }
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1c1c1e;
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.92rem;
+      transition: transform 0.25s ease;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      z-index: 1000;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+    @media (max-width: 640px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .shortcut-banner-content {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .btn-shortcut-link {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <span class="badge">Apple Health x iOS Shortcuts</span>
+    <h1>🍎 애플 건강 생리주기 일괄 등록기</h1>
+    <p>타 앱에서 백업한 CSV / TXT 생리주기 기록을 아이폰 건강(Apple Health) 앱에 한 번에 등록하세요.</p>
+  </header>
+
+  <!-- iOS 단축어 바로가기 배너 -->
+  <div class="shortcut-banner">
+    <div class="shortcut-banner-content">
+      <div class="shortcut-banner-text">
+        <h3>⚡ iOS 전용 '생리주기 일괄 등록' 단축어</h3>
+        <p>복잡하게 단축어를 직접 만들 필요 없습니다. 링크를 눌러 아이폰에 바로 추가하세요!</p>
+      </div>
+      <a href="https://www.icloud.com/shortcuts/c8ca5ec405284a969554c024248be16f" target="_blank" rel="noopener noreferrer" class="btn-shortcut-link">
+        📲 단축어 아이폰에 추가하기 &rarr;
+      </a>
+    </div>
+  </div>
+
+  <div class="privacy-banner">
+    🔒 모든 데이터 처리는 사용자의 브라우저 안에서만 100% 오프라인으로 작동하며, 외부 서버로 절대 전송되지 않습니다.
+  </div>
+
+  <!-- STEP 0: 지원하는 파일 및 텍스트 양식 안내 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span>📑 지원하는 CSV / TXT 샘플 양식 안내</span>
+      </div>
+      <div class="btn-group">
+        <button class="btn-outline btn-sm" id="loadSampleBtn">✨ 예시 데이터 채워보기</button>
+        <button class="btn-secondary btn-sm" id="downloadSampleCsvBtn">📥 샘플 CSV 다운로드</button>
+        <button class="btn-secondary btn-sm" id="downloadSampleTxtBtn">📥 샘플 TXT 다운로드</button>
+      </div>
+    </div>
+    <p style="font-size:0.9rem; color:var(--muted); margin-bottom:14px;">
+      한 줄에 <strong>[시작일]</strong>과 <strong>[종료일]</strong>이 포함되어 있으면 쉼표(<code>,</code>), 물결(<code>~</code>), 탭(<code>Tab</code>) 구분자를 모두 자동으로 인식합니다. (첫 줄 헤더 유무 무관)
+    </p>
+    <div class="format-grid">
+      <div class="format-box">
+        <h4>① 한국어 날짜 CSV 형식</h4>
+        <pre>start,end,duration
+2026년 10월 18일,2026년 10월 25일,8일
+2026년 09월 20일,2026년 09월 27일,8일</pre>
+      </div>
+      <div class="format-box">
+        <h4>② 표준 하이픈/점 CSV 형식</h4>
+        <pre>start_date,end_date,flow
+2026-10-18,2026-10-25,보통
+2026.09.20,2026.09.27,많음</pre>
+      </div>
+      <div class="format-box">
+        <h4>③ 자유 텍스트 (TXT) 형식</h4>
+        <pre>2026-10-18 ~ 2026-10-25
+2026년 9월 20일 ~ 2026년 9월 27일
+2026.08.21, 2026.08.28</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1: 데이터 입력 (기본 내장 데이터 없음) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span class="step-num">1</span> CSV / TXT 파일 업로드 또는 직접 입력
+      </div>
+      <button class="btn-secondary btn-sm" id="clearBtn">🗑️ 입력 초기화</button>
+    </div>
+
+    <div class="dropzone" id="dropzone">
+      <p>📂 여기를 클릭하거나 .csv / .txt 파일을 드래그 앤 드롭하세요</p>
+      <span>또는 아래 입력창에 생리주기 텍스트를 직접 복사해서 붙여넣으세요.</span>
+      <input type="file" id="fileInput" accept=".csv,.txt" style="display:none">
+    </div>
+
+    <textarea id="rawInput" placeholder="여기에 CSV 또는 TXT 파일 내용을 붙여넣으세요...&#10;예시:&#10;start,end,duration&#10;2026년 10월 18일,2026년 10월 25일,8일&#10;2026-09-20 ~ 2026-09-27"></textarea>
+
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-label">인식된 생리 주기</div>
+        <div class="stat-value" id="cycleCount">0회</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">변환된 일별 기록 수</div>
+        <div class="stat-value" id="dayCount">0일</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">기록 기간 범위</div>
+        <div class="stat-value" id="periodRange" style="font-size:1.05rem; padding-top:6px;">-</div>
+      </div>
+    </div>
+
+    <details id="previewDetails">
+      <summary style="cursor:pointer; font-weight:600; font-size:0.92rem; color:var(--muted); margin-bottom:10px;">
+        🔍 주기별 파싱 내역 미리보기 (클릭하여 펼치기)
+      </summary>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>시작일 (Start)</th>
+              <th>종료일 (End)</th>
+              <th>기간 (Duration)</th>
+            </tr>
+          </thead>
+          <tbody id="cycleTableBody">
+            <tr><td colspan="4" style="text-align:center; color:var(--muted); padding:20px;">데이터를 입력하면 파싱 결과가 표시됩니다.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </div>
+
+  <!-- STEP 2: 변환 데이터 복사 -->
+  <div class="card">
+    <div class="card-title" style="margin-bottom:10px;">
+      <span class="step-num">2</span> 일별 날짜 리스트 복사하기
+    </div>
+    <p style="font-size:0.9rem; color:var(--muted); margin-bottom:12px;">
+      애플 건강은 생리 기록을 <strong>하루 단위 샘플</strong>로 저장합니다. 아래 출력창은 시작일~종료일 사이의 모든 날짜(<strong id="totalDaysInline">0</strong>일)를 <code>YYYY-MM-DD</code> 형식으로 풀어서 오름차순 정렬한 결과입니다.
+    </p>
+    <div class="output-box empty" id="dateOutput">위 1번 영역에 CSV/TXT 파일을 업로드하거나 텍스트를 입력해 주세요.</div>
+    <div class="btn-group">
+      <button class="btn-primary" id="copyDatesBtn" disabled>📋 일별 날짜 텍스트 전체 복사하기</button>
+      <button class="btn-secondary" id="downloadTxtBtn" disabled>💾 apple_health_dates.txt 저장</button>
+      <button class="btn-secondary" id="downloadJsonBtn" disabled>📦 상세 JSON 저장</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: 아이폰 단축어 가이드 -->
+  <div class="card">
+    <div class="card-title" style="margin-bottom:12px;">
+      <span class="step-num">3</span> 아이폰 [단축어(Shortcuts)] 앱에서 한 번에 등록하기
+    </div>
+    <p style="font-size:0.92rem; color:var(--muted); margin-bottom:16px;">
+      이미 만들어진 단축어 링크를 통해 아이폰에 추가한 뒤, 복사한 텍스트를 전달하기만 하면 됩니다.
+    </p>
+    <ol class="shortcut-steps">
+      <li>
+        아이폰에서 아래 링크를 눌러 <strong>[생리주기 일괄 등록 단축어]</strong>를 추가합니다:<br>
+        <div style="margin: 8px 0;">
+          <a href="https://www.icloud.com/shortcuts/c8ca5ec405284a969554c024248be16f" target="_blank" rel="noopener noreferrer" style="color:#007aff; font-weight:700; text-decoration:underline;">
+            🔗 https://www.icloud.com/shortcuts/c8ca5ec405284a969554c024248be16f
+          </a>
+        </div>
+      </li>
+      <li>
+        위 2번 단계에서 <strong>[📋 일별 날짜 텍스트 전체 복사하기]</strong> 버튼을 누릅니다.
+        <span style="display:block; font-size:0.85rem; color:var(--muted); margin-top:3px;">
+          (PC에서 복사한 경우 카카오톡 '나에게 보내기' 또는 아이클라우드 메모장을 통해 아이폰 클립보드로 복사하세요.)
+        </span>
+      </li>
+      <li>
+        아이폰에서 추가한 단축어를 실행(터치)합니다.
+      </li>
+      <li>
+        프롬프트 입력창이 나타나면 복사해 둔 <strong>일별 날짜 텍스트 전체를 붙여넣기</strong>하고 [완료]를 누릅니다.
+      </li>
+      <li>
+        건강 데이터 쓰기 권한을 최초 1회 <strong>[허용]</strong>해 주면, <strong>수백 일치의 생리 기록이 애플 건강에 단 몇 초 만에 전부 등록됩니다!</strong> 🎉
+      </li>
+    </ol>
+  </div>
+</div>
+
+<div class="toast" id="toast">클립보드에 복사되었습니다!</div>
+
+<script>
+const SAMPLE_CSV = `start,end,duration
+2026년 10월 18일,2026년 10월 25일,8일
+2026년 09월 20일,2026년 09월 27일,8일
+2026년 08월 21일,2026년 08월 28일,8일`;
+
+const SAMPLE_TXT = `2026-10-18 ~ 2026-10-25
+2026-09-20 ~ 2026-09-27
+2026-08-21 ~ 2026-08-28`;
+
+const rawInput = document.getElementById('rawInput');
+const cycleCountEl = document.getElementById('cycleCount');
+const dayCountEl = document.getElementById('dayCount');
+const totalDaysInlineEl = document.getElementById('totalDaysInline');
+const periodRangeEl = document.getElementById('periodRange');
+const cycleTableBody = document.getElementById('cycleTableBody');
+const dateOutput = document.getElementById('dateOutput');
+
+const copyDatesBtn = document.getElementById('copyDatesBtn');
+const downloadTxtBtn = document.getElementById('downloadTxtBtn');
+const downloadJsonBtn = document.getElementById('downloadJsonBtn');
+
+let currentDates = [];
+let currentDetailedRecords = [];
+
+// 한국어 날짜("2026년 10월 18일") 또는 "2026-10-18", "2026.10.18", "2026/10/18" 파싱
+function parseFlexibleDate(str) {
+  if (!str) return null;
+  const m = str.trim().match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+  if (!m) return null;
+  const year = parseInt(m[1], 10);
+  const month = parseInt(m[2], 10);
+  const day = parseInt(m[3], 10);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+function formatYMD(dateObj) {
+  const y = dateObj.getUTCFullYear();
+  const m = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function processCSV(text) {
+  if (!text || !text.trim()) {
+    currentDetailedRecords = [];
+    currentDates = [];
+    cycleCountEl.textContent = '0회';
+    dayCountEl.textContent = '0일';
+    totalDaysInlineEl.textContent = '0';
+    periodRangeEl.textContent = '-';
+    copyDatesBtn.disabled = true;
+    downloadTxtBtn.disabled = true;
+    downloadJsonBtn.disabled = true;
+    cycleTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--muted); padding:20px;">데이터를 입력하면 파싱 결과가 표시됩니다.</td></tr>`;
+    dateOutput.classList.add('empty');
+    dateOutput.textContent = '위 1번 영역에 CSV/TXT 파일을 업로드하거나 텍스트를 입력해 주세요.';
+    return;
+  }
+
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const cycles = [];
+  const dailyMap = new Map();
+
+  for (const line of lines) {
+    if (line.toLowerCase().startsWith('start') || line.startsWith('#')) continue;
+    const parts = line.split(/[,\t~]/);
+    if (parts.length < 2) continue;
+
+    const startDate = parseFlexibleDate(parts[0]);
+    const endDate = parseFlexibleDate(parts[1]);
+    if (!startDate || !endDate || startDate > endDate) continue;
+
+    const flowRaw = parts[2] ? parts[2].trim() : '보통';
+    const flow = ['적음', '보통', '많음', '미지정'].includes(flowRaw) ? flowRaw : '보통';
+
+    const diffDays = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+    cycles.push({
+      start: formatYMD(startDate),
+      end: formatYMD(endDate),
+      days: diffDays
+    });
+
+    let curr = new Date(startDate.getTime());
+    while (curr <= endDate) {
+      const ymd = formatYMD(curr);
+      const isStart = (curr.getTime() === startDate.getTime());
+      dailyMap.set(ymd, {
+        date: ymd,
+        flow: flow,
+        is_start: isStart
+      });
+      curr.setUTCDate(curr.getUTCDate() + 1);
+    }
+  }
+
+  const sortedRecords = Array.from(dailyMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+  currentDetailedRecords = sortedRecords;
+  currentDates = sortedRecords.map(r => r.date);
+
+  cycleCountEl.textContent = `${cycles.length}회`;
+  dayCountEl.textContent = `${currentDates.length}일`;
+  totalDaysInlineEl.textContent = currentDates.length;
+
+  const hasData = currentDates.length > 0;
+  copyDatesBtn.disabled = !hasData;
+  downloadTxtBtn.disabled = !hasData;
+  downloadJsonBtn.disabled = !hasData;
+
+  if (hasData) {
+    periodRangeEl.textContent = `${currentDates[0].slice(2)} ~ ${currentDates[currentDates.length - 1].slice(2)}`;
+    cycleTableBody.innerHTML = cycles.map((c, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${c.start}</td>
+        <td>${c.end}</td>
+        <td><strong>${c.days}일</strong></td>
+      </tr>
+    `).join('');
+    dateOutput.classList.remove('empty');
+    dateOutput.textContent = currentDates.join('\n');
+  } else {
+    periodRangeEl.textContent = '-';
+    cycleTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--muted); padding:20px;">유효한 시작일과 종료일을 찾을 수 없습니다. 양식을 확인해 주세요.</td></tr>`;
+    dateOutput.classList.add('empty');
+    dateOutput.textContent = '유효한 날짜 데이터를 찾을 수 없습니다.';
+  }
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+rawInput.addEventListener('input', (e) => processCSV(e.target.value));
+
+// 샘플 버튼 이벤트
+document.getElementById('loadSampleBtn').addEventListener('click', () => {
+  rawInput.value = SAMPLE_CSV;
+  processCSV(SAMPLE_CSV);
+  showToast('✨ 예시 데이터가 입력되었습니다.');
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  rawInput.value = '';
+  processCSV('');
+  showToast('🗑️ 입력 내용이 초기화되었습니다.');
+});
+
+document.getElementById('downloadSampleCsvBtn').addEventListener('click', () => {
+  const blob = new Blob(['\uFEFF' + SAMPLE_CSV], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sample_menstrual_cycles.csv';
+  a.click();
+});
+
+document.getElementById('downloadSampleTxtBtn').addEventListener('click', () => {
+  const blob = new Blob([SAMPLE_TXT], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sample_menstrual_cycles.txt';
+  a.click();
+});
+
+// 드래그 앤 드롭 및 파일 선택
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) readFile(file);
+});
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) readFile(file);
+  fileInput.value = '';
+});
+
+function readFile(file) {
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    rawInput.value = ev.target.result;
+    processCSV(rawInput.value);
+    showToast(`📂 '${file.name}' 파일을 불러왔습니다!`);
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+// 복사 및 다운로드 버튼
+copyDatesBtn.addEventListener('click', async () => {
+  if (!currentDates.length) return;
+  await navigator.clipboard.writeText(currentDates.join('\n'));
+  showToast(`✅ 총 ${currentDates.length}일의 날짜가 클립보드에 복사되었습니다!`);
+});
+
+downloadTxtBtn.addEventListener('click', () => {
+  if (!currentDates.length) return;
+  const blob = new Blob([currentDates.join('\n')], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'apple_health_dates.txt';
+  a.click();
+});
+
+downloadJsonBtn.addEventListener('click', () => {
+  if (!currentDetailedRecords.length) return;
+  const blob = new Blob([JSON.stringify(currentDetailedRecords, null, 2)], { type: 'application/json;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'apple_health_cycles.json';
+  a.click();
+});
+</script>
+</body>
+</html>
