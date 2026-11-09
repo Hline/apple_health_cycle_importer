@@ -368,6 +368,82 @@
       color: var(--primary-dark);
       border-color: #ffc2cf;
     }
+
+    /* Why Section */
+    .why-box {
+      background: #fbfbfd;
+      border: 1px solid #e1e4e8;
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+    .why-box h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .why-desc {
+      font-size: 0.92rem;
+      color: #3a3a3c;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .compare-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .compare-card.target {
+      border-color: #ffc2cf;
+      background: #fffafa;
+    }
+    .compare-card h4 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .compare-card pre {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.8rem;
+      background: var(--code-bg);
+      padding: 10px;
+      border-radius: 8px;
+      color: #333;
+      margin-bottom: 8px;
+      line-height: 1.45;
+    }
+    .compare-card p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .why-highlight {
+      background: #fff8e6;
+      border-left: 4px solid #f5a623;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      color: #7a5100;
+      line-height: 1.5;
+    }
+    .why-highlight strong {
+      color: #4d3300;
+    }
+
     .table-wrap {
       max-height: 240px;
       overflow-y: auto;
@@ -409,7 +485,7 @@
       transform: translateX(-50%) translateY(0);
     }
     @media (max-width: 640px) {
-      .stats-grid {
+      .stats-grid, .compare-grid {
         grid-template-columns: 1fr;
       }
       .shortcut-banner-content {
@@ -449,6 +525,38 @@
     🔒 모든 데이터 처리는 사용자의 브라우저 안에서만 100% 오프라인으로 작동하며, 외부 서버로 절대 전송되지 않습니다.
   </div>
 
+  <!-- WHY SECTION: 왜 이 변환기를 써야 하는가? -->
+  <div class="why-box">
+    <h3>🤔 왜 이 변환기가 필요할까요? (애플 건강의 등록 원리)</h3>
+    <p class="why-desc">
+      대부분의 캘린더나 생리 앱은 <strong>"시작일 ~ 종료일"의 기간(Range)</strong> 형태로 기록하지만, 
+      <strong>애플 건강(Apple Health)은 기간 단위 등록을 지원하지 않고 하루씩(Daily Sample) 낱개로 저장</strong>하기 때문입니다!
+    </p>
+
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h4>📋 사용자가 가진 데이터 (기간형)</h4>
+        <pre>2026-10-18 ~ 2026-10-25
+(시작일과 종료일 1줄로 표현)</pre>
+        <p>기존 앱 백업이나 캘린더에는 1개 주기가 1줄로 묶여 있습니다.</p>
+      </div>
+
+      <div class="compare-card target">
+        <h4>🍎 애플 건강이 받는 실제 양식 (일별 낱개)</h4>
+        <pre>2026-10-18  &rarr;  [월경 기록]
+2026-10-19  &rarr;  [월경 기록]
+... 총 8개의 개별 샘플 등록!</pre>
+        <p>애플 건강은 날짜가 매일 연속해서 들어와야 스스로 하나의 '주기'로 묶어 분석합니다.</p>
+      </div>
+    </div>
+
+    <div class="why-highlight">
+      💡 <strong>수작업의 한계 & 변환기의 역할:</strong><br>
+      2년 치(약 23회 주기)를 아이폰에서 손으로 넣으려면 <strong>총 185일의 날짜를 달력에서 찾아 185번 직접 클릭</strong>해야 합니다.<br>
+      이 변환기에 <code>start, end</code> 목록만 넣으면, <strong>0.1초 만에 185개의 일별 날짜로 자동 쪼개어 정렬</strong>해 주므로 단축어에서 복사-붙여넣기 한 번으로 3초 만에 끝납니다!
+    </div>
+  </div>
+
   <!-- STEP 0: 지원하는 파일 및 텍스트 양식 안내 -->
   <div class="card">
     <div class="card-header">
@@ -461,8 +569,11 @@
         <button class="btn-secondary btn-sm" id="downloadSampleTxtBtn">📥 샘플 TXT 다운로드</button>
       </div>
     </div>
-    <p style="font-size:0.9rem; color:var(--muted); margin-bottom:14px;">
-      한 줄에 <strong>[시작일]</strong>과 <strong>[종료일]</strong>이 포함되어 있으면 쉼표(<code>,</code>), 물결(<code>~</code>), 탭(<code>Tab</code>) 구분자를 모두 자동으로 인식합니다. (첫 줄 헤더 유무 무관)
+    <p style="font-size:0.9rem; color:var(--muted); margin-bottom:8px;">
+      한 줄에 <strong>[시작일]</strong>과 <strong>[종료일]</strong>이 포함되어 있으면 쉼표(<code>,</code>), 물결(<code>~</code>), 탭(<code>Tab</code>) 구분자를 모두 자동으로 인식합니다.
+    </p>
+    <p style="font-size:0.86rem; color:#d91b42; font-weight:600; margin-bottom:14px;">
+      💡 <code>duration</code>(기간) 컬럼은 파일에 없어도 전혀 무관합니다! 시작일과 종료일로 날짜 수가 자동 계산됩니다.
     </p>
     <div class="format-grid">
       <div class="format-box">
